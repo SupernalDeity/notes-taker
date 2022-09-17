@@ -6,8 +6,6 @@ const app = express();
 const uniqid = require('uniqid');
 const util = require('util');
 
-
-
 // Middleware for parsing JSON and URL encoded form data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -15,13 +13,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // GET Routes for html pages
-app.get('/', (req, res) =>{
-    res.sendFile(path.join(__dirname, '/public/index.html'))
-});
 app.get('/notes', (req, res) => {
     res.sendFile(path.join(__dirname, '/public/notes.html'))
 });
-
+app.get('/', (req, res) =>
+    res.sendFile(path.join(__dirname, 'public/index.html'))
+);
 
 // API routes
 
@@ -35,9 +32,9 @@ app.get('/api/notes', (req, res) => {
 
 // Helper function for post request
 const writeToFile = (destination, content) =>
-  fs.writeFile(destination, JSON.stringify(content, null, 4), (err) =>
-    err ? console.error(err) : console.info(`\nData written to ${destination}`)
-  );
+    fs.writeFile(destination, JSON.stringify(content, null, 4), (err) =>
+        err ? console.error(err) : console.info(`\nData written to ${destination}`)
+    );
 
 // Helper function for post request
 const readAndAppend = (content, file) => {
@@ -54,7 +51,7 @@ const readAndAppend = (content, file) => {
 
 // POST request thats adds notes 
 app.post('/api/notes', (req, res) => {
-    const { title, text} = req.body;
+    const { title, text } = req.body;
 
     if (req.body) {
         const newTip = {
@@ -68,6 +65,16 @@ app.post('/api/notes', (req, res) => {
     } else {
         res.error('Error in adding note.')
     }
+});
+
+app.delete('/api/notes/:id', (req, res) => {
+    let currentNotes = JSON.parse(fs.readFileSync('./db/db.json', 'utf8'));
+
+    const filteredNotes = currentNotes.filter((notes) => {
+        return notes.id !== req.params.id;
+    });
+    writeToFile('./db/db.json', filteredNotes);
+    res.json('Note removed succesffuly!');
 });
 
 app.listen(PORT, () =>
